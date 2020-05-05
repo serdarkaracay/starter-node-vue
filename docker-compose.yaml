@@ -1,0 +1,42 @@
+version: "3"
+services:
+  backend:
+    image: backend
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    environment:
+      - VIRTUAL_HOST=starter-node-vue.localhost/api,starter-node-vue.localhost/api/*
+    expose:
+      - 3000
+    volumes:
+      - ./backend/src:/app/src
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    environment:
+      - HOST=0.0.0.0
+      - VIRTUAL_HOST=starter-node-vue.localhost
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    expose:
+      - 8080
+
+  load-balancer:
+    image: dockercloud/haproxy:1.6.7
+    links:
+      - backend
+      - frontend
+    networks:
+      default:
+        aliases:
+          - starter-node-vue.localhost
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 80:80
+      - 443:443
+    restart: on-failure
